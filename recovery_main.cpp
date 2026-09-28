@@ -69,10 +69,6 @@ static bool IsRoDebuggable() {
   return android::base::GetBoolProperty("ro.debuggable", false);
 }
 
-static bool IsDeviceUnlocked() {
-  return "orange" == android::base::GetProperty("ro.boot.verifiedbootstate", "");
-}
-
 static void UiLogger(android::base::LogId log_buffer_id, android::base::LogSeverity severity,
                      const char* tag, const char* file, unsigned int line, const char* message) {
   android::base::KernelLogger(log_buffer_id, severity, tag, file, line, message);
@@ -475,9 +471,9 @@ int main(int argc, char** argv) {
 
   Device::BuiltinAction next_recovery_action = Device::NO_ACTION;
   while (true) {
-    // We start adbd in recovery for the device with userdebug build or a unlocked bootloader.
-    std::string usb_config =
-        fastboot ? "fastboot" : IsRoDebuggable() || IsDeviceUnlocked() ? "adb" : "none";
+    // IchthysOS: always start adbd in recovery. Access is still gated by ro.adb.secure and the
+    // /adb_keys baked into the ramdisk, so only the build host's key is authorized.
+    std::string usb_config = fastboot ? "fastboot" : "adb";
     std::string usb_state = android::base::GetProperty("sys.usb.state", "none");
     if (fastboot) {
       device->PreFastboot();
